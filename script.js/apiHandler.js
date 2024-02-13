@@ -1,16 +1,36 @@
 // apiHandler.js
-export async function fetchData() {
+
+export async function fetchBooks() {
+  const apiUrl = 'https://www.googleapis.com/books/v1/volumes?q=javascript';
+
   try {
-    const response = await fetch('https://www.googleapis.com/books/v1/volumes?q=javascript');
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error('Failed to fetch books');
+    }
+
     const data = await response.json();
-    return data.items.map(book => ({
-      title: book.volumeInfo.title,
-      author: book.volumeInfo.authors ? book.volumeInfo.authors.join(', ') : 'Unknown Author',
-      description: book.volumeInfo.description || 'No description available',
-      thumbnail: book.volumeInfo.imageLinks ? book.volumeInfo.imageLinks.thumbnail : '',
-    }));
+    const books = extractBookDetails(data);
+    return books;
   } catch (error) {
-    console.error('Error fetching data:', error);
-    throw error;
+    console.error('Error fetching books:', error);
+    return [];
   }
+}
+
+function extractBookDetails(data) {
+  return data.items.map(item => {
+    const book = {
+      id: item.id,
+      title: item.volumeInfo.title,
+      authors: item.volumeInfo.authors,
+      publisher: item.volumeInfo.publisher,
+      publishedDate: item.volumeInfo.publishedDate,
+      description: item.volumeInfo.description,
+      thumbnail: item.volumeInfo.imageLinks?.thumbnail || 'No thumbnail available',
+      pageCount: item.volumeInfo.pageCount,
+      previewLink: item.volumeInfo.previewLink,
+    };
+    return book;
+  });
 }
